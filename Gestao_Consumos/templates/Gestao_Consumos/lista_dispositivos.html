@@ -1,0 +1,170 @@
+{% extends "Gestao_Consumos/base.html" %}
+{% load static %}
+{% block title %}Os Meus Dispositivos{% endblock %}
+{% block styles %}
+    <style>
+        .table td { vertical-align: middle; }
+    </style>
+{% endblock %}
+
+{% block content %}
+    
+   
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0">Os Meus Dispositivos</h2>
+        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalAdicionar"><i class="fas fa-plus me-2"></i> Adicionar Novo</button>
+    </div>
+
+    <div class="card border-0 shadow-sm p-3">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="text-secondary small"><tr><th>Nome</th> <th>Categoria</th> <th>Tipo</th> <th>Unidade</th> <th class="text-end">Ações</th></tr></thead>
+                <tbody>
+                    {% for disp in dispositivos %}
+                    <tr>
+                        <td class="fw-bold"><i class="fas fa-circle text-success small me-2"></i>{{ disp.nome }}</td>
+                        <td><span class="badge rounded-pill bg-opacity-10 {% if disp.categoria.categoria == 'Gerador' %}bg-success text-success{% else %}bg-danger text-danger{% endif %}">{{ disp.categoria.categoria }}</span></td>
+                        <td>
+                            {% with tipo=disp.tipo.tipo %}
+                                {% if tipo == 'Luz' %}Luz <i class="fas fa-bolt text-warning me-1"></i>
+                                {% elif tipo == 'Agua' %}Água <i class="fas fa-tint text-info me-1"></i>
+                                {% elif tipo == 'Gas' %}Gás <i class="fas fa-fire text-danger me-1"></i>
+                                {% else %}{{ tipo }}{% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="text-muted fw-bold">{{ disp.unidade }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary border-0 me-1" data-bs-toggle="modal" data-bs-target="#modalEditar-{{ disp.id_dispositivo_residente }}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                            <a href="{% url 'apagar_dispositivo' disp.id_dispositivo_residente %}" class="btn btn-sm text-danger" title="Eliminar Dispositivo"><i class="fas fa-trash-alt"></i></a> <!--Queremos apagar um dispositivo,vai buscar a função do views.-->
+                        </td>
+                    </tr>
+                    
+                    <div class="modal fade modal-editar-dinamico" id="modalEditar-{{ disp.id_dispositivo_residente }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg">
+                                <div class="modal-header bg-primary text-white"><h5 class="modal-title fw-bold"><i class="fas fa-pencil-alt me-2"></i>Editar: {{ disp.nome }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                                <div class="modal-body p-4">
+                                    <form action="{% url 'editar_dispositivo_post' disp.id_dispositivo_residente %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-3"><label class="form-label fw-bold small text-secondary">Nome</label><input type="text" name="nome" class="form-control" value="{{ disp.nome }}" required></div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold small text-secondary">Tipo</label>
+                                                <select name="tipo" class="form-select select-tipo-js" required>
+                                                    {% for choice_id, choice_label in form.fields.tipo.choices %}<option value="{{ choice_id }}" {% if disp.tipo.id == choice_id %}selected{% endif %}>{{ choice_label }}</option>{% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold small text-secondary">Categoria</label>
+                                                <select name="categoria" class="form-select" required>
+                                                    {% for choice_id, choice_label in form.fields.categoria.choices %}<option value="{{ choice_id }}" {% if disp.categoria.id == choice_id %}selected{% endif %}>{{ choice_label }}</option>{% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold small text-secondary">Unidade</label>
+                                            <select name="unidade" class="form-select select-unidade-js">
+                                                {% for choice_val, choice_label in form.fields.unidade.choices %}<option value="{{ choice_val }}" {% if disp.unidade == choice_val %}selected{% endif %}>{{ choice_label }}</option>{% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="d-grid"><button type="submit" class="btn btn-primary fw-bold py-2">Guardar Alterações</button></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-plug fa-2x mb-2 opacity-25"></i><br>Sem dispositivos.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="modalAdicionar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>Adicionar Dispositivo</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body p-4">
+                    <form action="{% url 'adicionar_dispositivo' %}" method="POST">
+                        {% csrf_token %}
+                        
+                        {# Exibe erros gerais do formulário #}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3"><label class="form-label fw-bold text-secondary">Nome</label>{{ form.nome }}</div>
+                        <div class="mb-3"><label class="form-label fw-bold text-secondary">Tipo</label>{{ form.tipo }}</div>
+                        <div class="mb-3"><label class="form-label fw-bold text-secondary">Categoria</label>{{ form.categoria }}</div>
+                        <div class="mb-3"><label class="form-label fw-bold text-secondary">Unidade</label>{{ form.unidade }}</div>
+                        <div class="d-grid gap-2 mt-4"><button type="submit" class="btn btn-primary fw-bold py-2">Guardar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+ <script>
+    document.addEventListener('DOMContentLoaded', function() { 
+
+   // Função para corrigir a unidade com base no tipo selecionado, se for Luz vai ser KHw obrigatoriamente  
+
+    function corrigirUnidade(campoTipo, campoUnidade) { if (!campoTipo || !campoUnidade) return;
+    const index = campoTipo.selectedIndex;
+    if (index === -1) return; 
+        const textoTipo = campoTipo.options[index].text;
+    
+   //Definir as unidades
+    if (textoTipo.includes('Luz')) {
+        campoUnidade.value = 'kWh'; }       
+    else if (textoTipo.includes('Água') || textoTipo.includes('Gás')) {
+        campoUnidade.value = 'm3';
+    }
+    }
+    //O modal é um janela pop-up que aparece por cima da página atual.
+    //Adicionar dispositivos
+    const modalAdicionar = document.getElementById('modalAdicionar');
+    if (modalAdicionar) 
+    {
+        const tipoAdd = modalAdicionar.querySelector('#id_tipo');
+        const unidadeAdd = modalAdicionar.querySelector('#id_unidade');
+        const errorAlert = modalAdicionar.querySelector('.alert-danger');
+        if (errorAlert) {
+            const modalInstance = new bootstrap.Modal(modalAdicionar);
+            modalInstance.show();
+            corrigirUnidade(tipoAdd, unidadeAdd); 
+        }
+
+        
+        if (tipoAdd) 
+        {
+            tipoAdd.addEventListener('change', function() { corrigirUnidade(tipoAdd, unidadeAdd); });
+            modalAdicionar.addEventListener('shown.bs.modal', function () { corrigirUnidade(tipoAdd, unidadeAdd); });
+        }
+    }
+
+    
+    const modaisEditar = document.querySelectorAll('.modal-editar-dinamico');
+    modaisEditar.forEach(modal => {
+        const selectTipo = modal.querySelector('.select-tipo-js');
+        const selectUnidade = modal.querySelector('.select-unidade-js');    
+      
+        modal.addEventListener('shown.bs.modal', function () { corrigirUnidade(selectTipo, selectUnidade); });
+
+
+        if (selectTipo) 
+        {
+            selectTipo.addEventListener('change', function() { corrigirUnidade(selectTipo, selectUnidade); });
+        }
+    });
+ });
+ </script>
+{% endblock %}

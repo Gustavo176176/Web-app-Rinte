@@ -1,0 +1,3 @@
+Rodar a bd: docker exec -it mariadDB-APP mariadb -u user -p 
+Atualizar a bd: python manage.py migrate
+Iniciar a API: python manage.py runserver

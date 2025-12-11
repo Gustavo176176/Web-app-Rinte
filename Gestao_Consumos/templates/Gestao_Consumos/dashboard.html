@@ -1,0 +1,136 @@
+{% extends 'Gestao_Consumos/base.html' %} <!--Extende a base configurado-->
+{% block content %}
+<style>
+    .icon-box { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.5rem; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark m-0">Dashboard Mensal</h2>
+    <!--Configurei o filtro de mês e ano-->
+    <form method="GET" class="d-flex gap-2 bg-white p-2 rounded shadow-sm">
+        <select name="mes" class="form-select form-select-sm fw-bold text-secondary" style="width: 120px;">
+            <option value="1" {% if mes_atual == 1 %}selected{% endif %}>Janeiro</option>
+            <option value="2" {% if mes_atual == 2 %}selected{% endif %}>Fevereiro</option>
+            <option value="3" {% if mes_atual == 3 %}selected{% endif %}>Março</option>
+            <option value="4" {% if mes_atual == 4 %}selected{% endif %}>Abril</option>
+            <option value="5" {% if mes_atual == 5 %}selected{% endif %}>Maio</option>
+            <option value="6" {% if mes_atual == 6 %}selected{% endif %}>Junho</option>
+            <option value="7" {% if mes_atual == 7 %}selected{% endif %}>Julho</option>
+            <option value="8" {% if mes_atual == 8 %}selected{% endif %}>Agosto</option>
+            <option value="9" {% if mes_atual == 9 %}selected{% endif %}>Setembro</option>
+            <option value="10" {% if mes_atual == 10 %}selected{% endif %}>Outubro</option>
+            <option value="11" {% if mes_atual == 11 %}selected{% endif %}>Novembro</option>
+            <option value="12" {% if mes_atual == 12 %}selected{% endif %}>Dezembro</option>
+        </select>
+        <select name="ano" class="form-select form-select-sm fw-bold text-secondary" style="width: 90px;">
+            {% for y in anos_range %}
+                <option value="{{ y }}" {% if ano_atual == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter"></i></button>
+    </form>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm p-4 bg-primary text-white h-100 card-hover">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 opacity-75">Fatura Estimada</p>
+                    <h1 class="fw-bold mb-0">{{ custo_total }} €</h1>   <!--Variavel total dos custos (agua/luz/gas)-->
+            
+                    {% if status_alerta == 'excedido' %}
+                        <div class="badge bg-danger mt-2 border border-white">⚠️ Orçamento Excedido!</div>
+                    {% elif status_alerta == 'dentro' %}
+                        <div class="badge bg-success mt-2 border border-white">✅ Não Excedeu o Orçamento</div>
+                    {% endif %}
+                </div>
+                <i class="fas fa-wallet fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100 card-hover">
+            <div class="d-flex align-items-center">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="fas fa-tv"></i></div>
+                <div>
+                    <p class="text-muted mb-0 small">Ativos</p>
+                    <h3 class="fw-bold mb-0">{{ total_dispositivos }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="text-muted fw-bold mb-3 small">DETALHES</h5>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 border-bottom border-4 border-warning card-hover">
+            <div class="d-flex justify-content-between">
+                <div><p class="small fw-bold text-secondary mb-0">LUZ</p><h4>{{ consumo_luz }} <small class="fs-6">kWh</small></h4></div>
+                <div class="text-end"><small>Custo</small><br><span class="badge bg-warning text-dark">{{ custo_luz }} €</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 border-bottom border-4 border-info card-hover">
+            <div class="d-flex justify-content-between">
+                <div><p class="small fw-bold text-secondary mb-0">ÁGUA</p><h4>{{ consumo_agua }} <small class="fs-6">m³</small></h4></div>
+                <div class="text-end"><small>Custo</small><br><span class="badge bg-info">{{ custo_agua }} €</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 border-bottom border-4 border-danger card-hover">
+            <div class="d-flex justify-content-between">
+                <div><p class="small fw-bold text-secondary mb-0">GÁS</p><h4>{{ consumo_gas }} <small class="fs-6">m³</small></h4></div>
+                <div class="text-end"><small>Custo</small><br><span class="badge bg-danger">{{ custo_gas }} €</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 card-hover">
+    <h5 class="fw-bold mb-3">Dispositivos</h5>
+    {% if dispositivos %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Nome</th><th>Categoria</th><th>Tipo</th><th>Unidade</th></tr>
+                </thead>
+                <tbody>
+                {% for disp in dispositivos %}
+                <tr>
+                    <td class="fw-bold">{{ disp.nome }}</td>
+                    <td>
+                        <span class="badge rounded-pill bg-opacity-10 
+                            {% if disp.categoria.categoria == 'Gerador' %}bg-success text-success{% else %}bg-danger text-danger{% endif %}">
+                            {{ disp.categoria.categoria }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if disp.tipo.tipo == 'Luz' %}
+                            Luz <i class="fas fa-bolt text-warning"></i>
+                        {% elif disp.tipo.tipo == 'Agua' %}
+                            Água <i class="fas fa-tint text-info"></i>
+                        {% elif disp.tipo.tipo == 'Gas' %}
+                            Gás <i class="fas fa-fire text-danger"></i>
+                        {% else %}
+                            {{ disp.tipo.tipo }}
+                        {% endif %}
+                    </td>
+                    <td class="text-muted">{{ disp.unidade }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-3 text-muted">
+            <p>Sem dispositivos.</p>
+            <a href="{% url 'lista_dispositivos' %}" class="btn btn-sm btn-outline-primary">Adicionar</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

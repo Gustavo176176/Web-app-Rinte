@@ -1,0 +1,81 @@
+{% extends "Gestao_Consumos/base.html" %}
+{% load static %}
+{% block title %}Definições de Perfil{% endblock %}
+{% block content %}
+    
+    <h2 class="fw-bold text-dark mb-4">A Minha Conta</h2>
+
+    <div class="card border-0 shadow-sm p-4" style="max-width: 800px;">
+        
+        <div class="d-flex align-items-center mb-4 border-bottom pb-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <h5 class="mb-0 fw-bold">Editar Informações Pessoais</h5>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="row g-3">
+                
+                <div class="col-md-6">
+                 <label class="form-label fw-bold text-secondary small">Nome Completo</label>
+                {{ form.nome }}
+                {% for error in form.nome.errors %}
+                 <p class="text-danger small mt-1">{{ error }}</p>
+                {% endfor %}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-secondary small">Email (Não editável)</label>
+                    {{ form.email }}
+                    </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-secondary small">Telemóvel</label>
+                    {{ form.telemovel }}
+                {% for error in form.telemovel.errors %}
+                 <p class="text-danger small mt-1">{{ error }}</p>
+                {% endfor %}
+                </div>
+
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-secondary small">Cidade</label>
+                    {{ form.cidade }}
+                 {% for error in form.cidade.errors %}
+                 <p class="text-danger small mt-1">{{ error }}</p>
+                {% endfor %}
+                </div>
+
+
+                <div class="col-md-8">
+                    <label class="form-label fw-bold text-secondary small">Morada</label>
+                    {{ form.morada }}
+                     {% for error in form.morada.errors %}
+                 <p class="text-danger small mt-1">{{ error }}</p>
+                {% endfor %}
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-secondary small">Código Postal</label>
+                    {{ form.codigo_postal }}
+                     {% for error in form.codigo_postal.errors %}
+                 <p class="text-danger small mt-1">{{ error }}</p>
+                {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary px-4 fw-bold">
+                    <i class="fas fa-save me-2"></i> Guardar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+{% block scripts %}
+    {% endblock %}

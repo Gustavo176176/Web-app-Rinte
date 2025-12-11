@@ -1,0 +1,204 @@
+{% extends "Gestao_Consumos/base.html" %}
+{% load static %}
+{% block title %}Limites e Relatórios{% endblock %}
+
+{% block content %}
+
+
+<h2 class="fw-bold text-dark mb-4">Gestão de Metas e Análise de Consumo</h2>
+<div class="card border-0 shadow-sm p-3 mb-4">
+    <form method="GET" action="{% url 'relatorios' %}" class="row g-3 align-items-end">
+        <div class="col-auto">
+            <label for="id_ano" class="form-label small fw-bold text-secondary">Filtrar Gráficos por Ano:</label>
+            <select name="ano" id="id_ano" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="{{ ano_atual }}">{{ ano_atual }}</option>
+                {% for ano in anos_range %}
+                    {% if ano != ano_atual %}
+                        <option value="{{ ano }}">{{ ano }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <label for="id_mes" class="form-label small fw-bold text-secondary">Filtrar por Mês:</label>
+            <select name="mes" id="id_mes" class="form-select form-select-sm" onchange="this.form.submit()">
+                {% for num, nome in meses_nomes %}
+                    <option value="{{ num }}" {% if num == mes_atual %}selected{% endif %}>{{ nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-outline-primary me-2">
+                <i class="fas fa-filter"></i>
+            </button>
+            <a href="{% url 'relatorios' %}" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
+        </div>
+    </form>
+
+
+
+    <div class="mt-3 pt-3 border-top d-flex gap-2">
+        <span class="fw-bold text-secondary small me-2">Gerar Relatórios:</span>
+        <a href="{% url 'gerar_pdf' tipo='mensal' ano=ano_atual mes=mes_atual %}" 
+           class="btn btn-sm btn-danger rounded-pill" title="Gerar Relatório Mensal">Mensal</a>
+        <a href="{% url 'gerar_pdf' tipo='anual' ano=ano_atual mes=0 %}" 
+           class="btn btn-sm btn-danger rounded-pill" title="Gerar Relatório Anual ({{ ano_atual }})">Anual</a>
+    </div>
+</div>
+
+
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <h5 class="mb-3 fw-bold text-primary">Inserir Novo Limite</h5>
+            <form method="POST"> <!--Inserir a informação pelo método POST-->
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">Tipo</label>
+                    {{ form.tipo }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">Valor Máximo (€)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form.valor }}
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label small fw-bold text-secondary">Mês</label>
+                        {{ form.mes }}
+                    </div>
+
+                    <div class="col-6 mb-3">
+                        <label class="form-label small fw-bold text-secondary">Ano</label>
+                        {{ form.ano }}
+
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold mt-3">
+                    <i class="fas fa-plus me-2"></i> Adicionar
+                </button>
+            </form>
+        </div>
+
+<!-- Histórico de Orçamento Limite -->
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="mb-3 fw-bold text-dark">Histórico Limite</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light small text-secondary">
+                        <tr>
+                            <th>Período</th>
+                            <th>Tipo</th>
+                            <th>Limite (€)</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% for meta in metas %}
+                        <tr>
+                             <td><span class="fw-bold text-dark">{{ meta.timestamp|date:"F/Y" }}</span></td>
+                             <td>
+                                    <i class="{% if meta.tipo.tipo == 'Luz' %}fas fa-bolt text-warning
+                                     {% elif meta.tipo.tipo == 'Agua' %}fas fa-tint text-info
+                                    {% elif meta.tipo.tipo == 'Gas' %}fas fa-fire text-danger
+                                    {% endif %} me-2"></i>
+                {{ meta.tipo.tipo }}
+                    </td>
+
+                <td class="fw-bold text-primary">{{ meta.valor|floatformat:2 }} €</td>
+                <td class="text-end">
+
+                {# Link que direciona para a página de edição da meta orçamental #}
+
+                <a href="{% url 'editar_meta' meta.pk %}" 
+                class="btn btn-sm btn-outline-primary border-0 rounded-circle me-1"
+                title="Editar Meta">
+                <i class="fas fa-pencil-alt"></i>
+        </a>
+                <a href="{% url 'apagar_meta' meta.pk %}" 
+                class="btn btn-sm btn-outline-danger border-0 rounded-circle">
+                <i class="fas fa-trash-alt"></i>
+        </a>
+        </td>
+</tr>
+        {% empty %}
+            <tr>
+            <td colspan="4" class="text-center py-3 text-muted">
+             Nenhuma meta de orçamento registada.
+            </td>
+            </tr>
+        {% endfor %}
+</tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+
+        <!-- Gráficos -->
+
+        <div class="card border-0 shadow-sm p-4 mb-4">
+
+            <h5 class="mb-3 fw-bold text-dark">Tendência de Gasto Total ({{ ano_atual }})</h5>
+            <canvas id="chartTendencia" style="max-height: 350px;"></canvas>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="mb-3 fw-bold text-dark">Distribuição de Custo Mensal (
+                {% if mes_atual %}Mês <i class="fas fa-arrow-right text-danger me-1"></i> {{nome_mes_atual}}{% else %}Anual{% endif %})</h5>
+            <canvas id="chartDistribuicao" style="max-height: 350px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts para os gráficos interativos -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+
+const MESES_NOMES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editMetaModal = document.getElementById('editMetaModal');
+    const dadosDistribuicao = JSON.parse('{{ dados_distribuicao_json|safe }}');
+    const dadosTendencia = JSON.parse('{{ dados_tendencia_json|safe }}');
+
+    <!--Gráfico de Tendência de Gasto Total-->
+
+    new Chart(document.getElementById('chartTendencia').getContext('2d'), {
+
+        type: 'line',
+
+        data: { labels: dadosTendencia.labels, datasets: [{ label:'Custo Total (€)', data: dadosTendencia.data, borderColor:'#0d6efd', backgroundColor:'rgba(13,110,253,0.1)', fill:true, tension:0.3 }] },
+
+        options: { scales: { y:{ beginAtZero:true, title:{ display:true, text:'Custo Total (€)' }}, x:{ title:{ display:true, text:'Mês' } } }, plugins:{ legend:{ display:false }}, responsive:true }
+
+    });
+
+    new Chart(document.getElementById('chartDistribuicao').getContext('2d'), {
+
+        type:'bar',
+
+        data:{ labels: dadosDistribuicao.labels, datasets:[{ label:'Custo (€)', data: dadosDistribuicao.data, backgroundColor:['#ffc107','#0dcaf0','#dc3545'], borderColor:'#343a40', borderWidth:1 }] },
+
+        options:{ scales:{ y:{ beginAtZero:true, title:{ display:true, text:'Custo Total (€)' } }, x:{ title:{ display:true, text:'Tipo' } } }, plugins:{ legend:{ display:false }}, responsive:true }
+
+    });
+
+});
+</script>
+{% endblock %}
+
