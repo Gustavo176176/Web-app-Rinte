@@ -68,7 +68,9 @@ pip install -r requirements.txt
 
 
 📸 Exemplos
+<img width="1890" height="894" alt="image" src="https://github.com/user-attachments/assets/d51ac876-82ab-407c-ad2c-b9d21b724e23" />
 
+<img width="1918" height="904" alt="image" src="https://github.com/user-attachments/assets/acb5873a-969c-4efc-905c-d89c310b8f31" />
 
 
 
