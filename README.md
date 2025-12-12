@@ -2,7 +2,7 @@
 
 🧩 Visão Geral
 
-A Web-app Rinte é uma aplicação web desenvolvida no âmbito do Mestrado em Engenharia Eletrotécnica e de Computadores — Automação e Sistemas (ISEP), pensada para monitorizar, organizar e analisar consumos residenciais,como água, luz e gás.
+Aplicação web desenvolvida no âmbito do Mestrado em Engenharia Eletrotécnica e de Computadores — Automação e Sistemas (ISEP), pensada para monitorizar, organizar e analisar consumos residenciais,como água, luz e gás.
 
 O objectivo é fornecer ao utilizador um painel simples, centralizado e web-friendly, onde pode inserir consumos, consultar históricos e identificar padrões que ajudam a reduzir desperdícios e melhorar a eficiência no ambiente doméstico, através de gráficos e documentos.
 
@@ -51,7 +51,7 @@ Estrutura HTML/CSS : Bootstrap
 		source venv/bin/activate       # Linux/macOS
 		venv\Scripts\activate          # Windows
 
-pip install -r requirements.txt
+		pip install -r requirements.txt
 
 3. Configurar a base de dados MySQL
 
