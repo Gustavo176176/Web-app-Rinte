@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML  # Para gerar PDFs
-
+from django.contrib.auth.decorators import user_passes_test
 
 
 from .models import (
@@ -40,9 +40,30 @@ MESES = {
 
 def _get_residente_or_redirect(user, redirect_to='dashboard'):
     try:
-        # Procura residente pelo email do utilizador
+      
         return Residente.objects.get(email=user.email)
     except Residente.DoesNotExist:
+   
+        if user.is_superuser:
+          
+            residente_root, created = Residente.objects.get_or_create(
+                telemovel='999999999',  
+                defaults={
+                    'nome': 'Administrador (Root)',
+                    'email': user.email,
+                    'password': 'root_password_placeholder',
+                    'morada': 'Sede Administrativa',
+                    'cidade': 'Sistema',
+                    'codigo_postal': '0000-000',
+                    'status': 1
+                }
+            )
+            if not created and residente_root.email != user.email:
+                residente_root.email = user.email
+                residente_root.save()
+                
+            return residente_root
+    
         return None
 
 # Função helper para extrair e validar ano e mês dos parâmetros GET
@@ -581,3 +602,49 @@ def associar_fornecedor(request):
         f"O seu fornecedor de {servico_tipo} foi atualizado para {fornecedor_tipo_obj.fornecedor.nome}."
     )
     return redirect('lista_fornecedores')
+
+def is_superuser_check(user):
+    return user.is_superuser
+
+
+@user_passes_test(is_superuser_check)
+def gerir_utilizadores(request):
+   
+    emails_root = User.objects.filter(is_superuser=True).values_list('email', flat=True)
+
+
+    residentes = Residente.objects.exclude(email__in=emails_root).order_by('nome')
+    
+
+    for r in residentes:
+        contratos = FornecedorResidente.objects.filter(residente=r, status=1)
+        lista_fornecedores = []
+        for c in contratos:
+            nome = c.fornecedor_tipo.fornecedor.nome
+            tipo = c.fornecedor_tipo.tipo.tipo
+            lista_fornecedores.append(f"{nome} ({tipo})")
+        
+        r.lista_empresas = lista_fornecedores
+
+    return render(request, 'Gestao_Consumos/gerir_utilizadores.html', {
+        'residentes': residentes
+    })
+@user_passes_test(is_superuser_check)
+def alterar_estado_residente(request, id_residente):
+    residente = get_object_or_404(Residente, pk=id_residente)
+    
+    
+    novo_status = 0 if residente.status == 1 else 1
+    residente.status = novo_status
+    residente.save()
+    
+    try:
+        user_django = User.objects.get(email=residente.email)
+        user_django.is_active = True if novo_status == 1 else False
+        user_django.save()
+        msg_tipo = "Ativado" if novo_status == 1 else "Bloqueado"
+        messages.success(request, f'Utilizador {residente.nome} foi {msg_tipo} com sucesso.')
+    except User.DoesNotExist:
+        messages.warning(request, 'Estado alterado no Residente, mas conta de Login não encontrada.')
+
+    return redirect('gerir_utilizadores')

@@ -28,4 +28,7 @@ urlpatterns = [
 
     path('fornecedores/', views.lista_fornecedores, name='lista_fornecedores'),
     path('associar-fornecedor/', views.associar_fornecedor, name='associar_fornecedor'),
+
+    path('admin-painel/utilizadores/', views.gerir_utilizadores, name='gerir_utilizadores'),
+    path('admin-painel/alterar-estado/<int:id_residente>/', views.alterar_estado_residente, name='alterar_estado_residente'),
 ]
