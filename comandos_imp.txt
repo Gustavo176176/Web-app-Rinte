@@ -1,3 +1,3 @@
-Rodar a bd: docker exec -it mariadDB-APP mariadb -u user -p 
-Atualizar a bd: python manage.py migrate
-Iniciar a API: python manage.py runserver
+Iniciar o container -->  docker exec -it mysql_consumos_novo  mysql -u user -p
+Atualizar a base de dados --> python manage.py migrate
+Iniciar a aplicação --> python manage.py runserver
