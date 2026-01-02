@@ -1,0 +1,173 @@
+{% extends "Gestao_Consumos/base.html" %}
+{% load static %}
+{% block title %}Fornecedores{% endblock %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0">Fornecedores</h2>
+    </div>
+
+    <div class="alert alert-info border-0 shadow-sm mb-5">
+        <i class="fas fa-info-circle me-2"></i> Escolha o fornecedor para cada serviço. O preço por unidade será automaticamente ajustado aos seus custos mensais!
+    </div>
+    
+    <h3 class="fw-bold text-secondary small mb-3">FORNECEDORES ATUAIS SELECIONADOS:</h3>
+    <div class="row mb-5">
+        {% for tipo_nome, fornecedor_id in residente_fornecedores.items %}
+            {# Procurar o fornecedor e serviço correspondente ao ID,tal como explicado no models.py #}
+            {% with fornecedor_atual=None %}
+                {% for f_data in fornecedores_data %}
+                    {% if f_data.info.id == fornecedor_id %}
+                        {% with fornecedor_atual=f_data %}
+                            {% for servico in fornecedor_atual.servicos %}
+                                {% if servico.servico_tipo == tipo_nome %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center bg-light">
+                                            
+                                            <div class="me-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                                {% if tipo_nome == 'Luz' %}
+                                                    <i class="fas fa-bolt text-warning"></i> 
+                                                {% elif tipo_nome == 'Agua' %}
+                                                    <i class="fas fa-tint text-info"></i>
+                                                {% elif tipo_nome == 'Gas' %}
+                                                    <i class="fas fa-fire text-danger"></i>
+                                                {% else %}
+                                                    <i class="fas fa-question-circle text-muted"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <small class="text-secondary">{{ tipo_nome|upper }}</small>
+                                                <h5 class="fw-bold m-0">{{ fornecedor_atual.info.nome }}</h5>
+                                                <small class="text-success fw-bold">{{ servico.tarifa_valor }} €/{{ servico.unidade }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+            
+            {# Se não houver fornecedor ativo #}
+            {% if not fornecedor_id %}
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-row align-items-center bg-light">
+                        <div class="me-3" style="width: 40px; height: 40px; background-color: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            <i class="fas fa-ban text-muted"></i>
+                        </div>
+                        <div>
+                            <small class="text-secondary">{{ tipo_nome|upper }}</small>
+                            <h5 class="fw-bold m-0 text-danger">Não Selecionado</h5>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+
+    <div class="row">
+        
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-lg p-4 h-100 d-flex flex-column">
+                <h4 class="fw-bold mb-4 text-warning"><i class="fas fa-bolt me-2"></i> Eletricidade (Luz)</h4>
+                
+                <form method="post" action="{% url 'associar_fornecedor' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="id_fornecedor_luz" class="form-label fw-bold small text-secondary">Escolha o plano (Preço/kWh):</label>
+                        <select class="form-select form-select-lg" id="id_fornecedor_luz" name="fornecedor_tipo_pk" required>
+                            <option value="">-- Selecionar Fornecedor --</option>
+                            
+                            {% for f_data in fornecedores_data %}
+                                {% for servico in f_data.servicos %}
+                                    {% if servico.servico_tipo == 'Luz' %}
+                                        {# Marca a opção como selecionada se for o fornecedor de Luz do residente #}
+                                        <option value="{{ servico.fornecedor_tipo_pk }}" 
+                                                {% if residente_fornecedores.Luz == f_data.info.id %}selected{% endif %}>
+                                            {{ f_data.info.nome }} ({{ servico.tarifa_valor }} €/{{ servico.unidade }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid mt-auto">
+                        <button type="submit" class="btn btn-warning w-100 fw-bold">Atualizar (Luz)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-lg p-4 h-100 d-flex flex-column">
+                <h4 class="fw-bold mb-4 text-info"><i class="fas fa-tint me-2"></i> Água</h4>
+                
+                <form method="post" action="{% url 'associar_fornecedor' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="id_fornecedor_agua" class="form-label fw-bold small text-secondary">Escolha o plano (Preço/m³):</label>
+                        <select class="form-select form-select-lg" id="id_fornecedor_agua" name="fornecedor_tipo_pk" required>
+                            <option value="">-- Selecionar Fornecedor  --</option>
+                            {% for f_data in fornecedores_data %}
+                                {% for servico in f_data.servicos %}
+                                    {% if servico.servico_tipo == 'Agua' %}
+
+                                        {# Marca a opção como selecionada se for o fornecedor de Água do residente #}
+
+                                        <option value="{{ servico.fornecedor_tipo_pk }}"
+                                                {% if residente_fornecedores.Agua == f_data.info.id %}selected{% endif %}>
+                                            {{ f_data.info.nome }} ({{ servico.tarifa_valor }} €/{{ servico.unidade }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid mt-auto">
+                        <button type="submit" class="btn btn-info w-100 fw-bold">Atualizar (Água)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-lg p-4 h-100 d-flex flex-column">
+                <h4 class="fw-bold mb-4 text-danger"><i class="fas fa-fire me-2"></i> Gás</h4>
+                
+                <form method="post" action="{% url 'associar_fornecedor' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="id_fornecedor_gas" class="form-label fw-bold small text-secondary">Escolha o plano (Preço/m³):</label>
+                        <select class="form-select form-select-lg" id="id_fornecedor_gas" name="fornecedor_tipo_pk" required>
+                            <option value="">-- Selecionar Fornecedor --</option>
+                            
+                            {% for f_data in fornecedores_data %}
+                                {% for servico in f_data.servicos %}
+                                    {% if servico.servico_tipo == 'Gas' %}
+
+                                        {# Marca a opção como selecionada se for o fornecedor de Gás do residente #}
+
+                                        <option value="{{ servico.fornecedor_tipo_pk }}"
+                                                {% if residente_fornecedores.Gas == f_data.info.id %}selected{% endif %}>
+                                            {{ f_data.info.nome }} ({{ servico.tarifa_valor }} €/{{ servico.unidade }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid mt-auto">
+                        <button type="submit" class="btn btn-danger w-100 fw-bold">Atualizar (Gás)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+<script>
+</script>
+{% endblock %}

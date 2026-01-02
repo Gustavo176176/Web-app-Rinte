@@ -1,0 +1,193 @@
+{% extends 'Gestao_Consumos/base.html' %}
+
+{% block content %}
+
+<style>
+
+    .modern-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    .table-header-custom {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .table-row-custom td {
+        vertical-align: middle;
+        padding: 1rem 1.5rem;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+    }
+    .table-row-custom:hover {
+        background-color: #f8fafc;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .status-active { background-color: #dcfce7; color: #166534; }
+    .status-inactive { background-color: #fee2e2; color: #991b1b; }
+    
+
+    .status-dot {
+        height: 6px; width: 6px;
+        border-radius: 50%; margin-right: 6px;
+    }
+    .dot-green { background-color: #22c55e; }
+    .dot-red { background-color: #ef4444; }
+    .btn-action-soft {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-action-block { background-color: #fff1f2; color: #e11d48; }
+    .btn-action-block:hover { background-color: #ffe4e6; border-color: #fda4af; }
+    
+    .btn-action-activate { background-color: #f0fdf4; color: #15803d; }
+    .btn-action-activate:hover { background-color: #dcfce7; border-color: #86efac; }
+    .user-avatar {
+        width: 38px; height: 38px;
+        background-color: #e0e7ff; color: #4f46e5;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 0.9rem;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .empresa-tag {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        border: 1px solid #e2e8f0;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1 text-gray-800 font-weight-bold">Residentes do sistema</h4>
+            <p class="text-muted small mb-0">Gerir acessos</p>
+        </div>
+    </div>
+
+    <div class="modern-card">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead class="table-header-custom">
+                    <tr>
+                        <th class="ps-4">Residente</th>
+                        <th>Contacto</th>
+                        <th>Cidade</th>
+                        <th>Fornecedores Associados</th> 
+                        <th>Status</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in residentes %}
+                    <tr class="table-row-custom">
+                        
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar">
+                                    {{ r.nome|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ r.nome }}</div>
+                                    <div class="text-muted small" style="font-size: 0.8rem;">{{ r.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fas fa-phone-alt me-2" style="font-size: 0.7rem;"></i>
+                                {{ r.telemovel }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if r.cidade %}
+                                {{ r.cidade }}
+                            {% else %}
+                                <span class="text-muted italic small">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if r.lista_empresas %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for empresa in r.lista_empresas %}
+                                        <span class="empresa-tag">
+                                            {{ empresa }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted small italic opacity-75">Sem contratos ativos</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if r.status == 1 %}
+                                <span class="status-badge status-active">
+                                    <span class="status-dot dot-green"></span> Ativo
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-inactive">
+                                    <span class="status-dot dot-red"></span> Bloqueado
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            {% if r.status == 1 %}
+                                <a href="{% url 'alterar_estado_residente' r.id_residente %}" class="btn-action-soft btn-action-block" title="Bloquear Acesso">
+                                    <i class="fas fa-lock me-1"></i> Bloquear
+                                </a>
+                            {% else %}
+                                <a href="{% url 'alterar_estado_residente' r.id_residente %}" class="btn-action-soft btn-action-activate" title="Ativar Acesso">
+                                    <i class="fas fa-check me-1"></i> Ativar
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-users fa-2x mb-3 text-gray-300"></i>
+                            <p>Não há residentes registados no sistema.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

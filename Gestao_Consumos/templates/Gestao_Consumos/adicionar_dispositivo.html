@@ -1,0 +1,78 @@
+{% extends 'Gestao_Consumos/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark m-0">Adicionar Dispositivo</h2>
+                <a href="{% url 'lista_dispositivos' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-3"><label class="form-label fw-bold small text-secondary">Nome</label>{{ form.nome }}</div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-secondary">Tipo</label>{{ form.tipo }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small text-secondary">Categoria</label>{{ form.categoria }}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-secondary">Unidade</label>{{ form.unidade }}
+                            {% if form.unidade.errors %}
+                                <div class="text-danger small">{{ form.unidade.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const campoTipo = document.getElementById('id_tipo');
+        const campoUnidade = document.getElementById('id_unidade');
+
+        function atualizarUnidade() {
+            if (!campoTipo || !campoUnidade) return;
+            const index = campoTipo.selectedIndex;
+            if (index === -1) return;
+            
+            const textoTipo = campoTipo.options[index].text;
+
+            if (textoTipo.includes('Luz')) {
+                campoUnidade.value = 'kWh'; 
+            } else if (textoTipo.includes('Água') || textoTipo.includes('Gás')) {
+                campoUnidade.value = 'm3';
+            }
+        }
+
+        if (campoTipo) {
+            campoTipo.addEventListener('change', atualizarUnidade);
+            setTimeout(atualizarUnidade, 100); 
+        }
+    });
+</script>
+{% endblock %}
